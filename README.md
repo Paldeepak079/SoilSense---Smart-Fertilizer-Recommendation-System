@@ -344,7 +344,7 @@ MIT License - feel free to use for agricultural innovation!
 
 Built with ❤️ for Indian farmers  
 **Project:** SoilSense - Smart Fertilizer Recommendation System  
-**Event:** Re-Gen & Quasa 4.0 Hackathon
+**Crafted by:** MADTech
 
 ---
 
