@@ -212,6 +212,28 @@ function Dashboard() {
                     ))}
                 </Grid>
             </Container>
+
+            {/* Footer */}
+            <Box
+                sx={{
+                    textAlign: 'center',
+                    py: 3,
+                    borderTop: '1px solid rgba(76, 175, 80, 0.2)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                    backdropFilter: 'blur(10px)'
+                }}
+            >
+                <Typography
+                    variant="body2"
+                    sx={{
+                        color: '#81C784',
+                        fontWeight: 500,
+                        letterSpacing: '0.5px'
+                    }}
+                >
+                    Crafted by Team_MADTech
+                </Typography>
+            </Box>
         </Box>
     );
 }
