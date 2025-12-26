@@ -1,0 +1,30 @@
+---
+# Render Blueprint for SoilSense Backend
+services:
+  - type: web
+    name: soilsense-backend
+    env: python
+    region: singapore
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        value: sqlite:///./soilsense.db
+      - key: ALLOWED_ORIGINS
+        sync: false  # Set this manually in Render dashboard with your Netlify URL
+      - key: JWT_SECRET
+        generateValue: true  # Auto-generate secure secret
+      - key: HOST
+        value: 0.0.0.0
+      - key: RATE_LIMIT_ENABLED
+        value: true
+      - key: RATE_LIMIT_PER_MINUTE
+        value: 60
+      - key: LOG_LEVEL
+        value: INFO
+      - key: LOG_TO_FILE
+        value: false

@@ -1,0 +1,15 @@
+# Netlify Configuration for SoilSense Frontend
+
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = "build"
+
+# Redirect all requests to index.html for client-side routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Environment variables (Set these in Netlify Dashboard instead)
+# REACT_APP_API_URL = "your-backend-url"
