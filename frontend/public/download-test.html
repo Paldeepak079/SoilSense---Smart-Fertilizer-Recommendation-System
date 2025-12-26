@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoilSense - Download Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000000;
+            color: #ffffff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #4CAF50, #81C784);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5em;
+        }
+
+        .card {
+            background: #000000;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.2);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #81C784;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            background: #1a1a1a;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 6px;
+            color: #ffffff;
+            font-size: 16px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        button {
+            padding: 15px 25px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.3);
+        }
+
+        button:hover {
+            background: #45a049;
+            box-shadow: 0 0 25px rgba(76, 175, 80, 0.5);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .info {
+            background: rgba(76, 175, 80, 0.1);
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .info h3 {
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+
+        .info p {
+            color: #e0e0e0;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .feature-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status.ready {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+        }
+
+        .status.pending {
+            background: rgba(255, 193, 7, 0.2);
+            color: #FFC107;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🌱 SoilSense Soil Health Card</h1>
+
+        <div class="card">
+            <div class="info">
+                <h3>✅ System Ready</h3>
+                <p><strong>Backend:</strong> http://localhost:8080</p>
+                <p><strong>Frontend:</strong> http://localhost:3001</p>
+            </div>
+
+            <div class="input-group">
+                <label for="recommendationId">Recommendation ID:</label>
+                <input type="number" id="recommendationId" placeholder="Enter recommendation ID (e.g., 1)" value="1"
+                    min="1">
+            </div>
+
+            <div class="button-group">
+                <button onclick="downloadCSV()">
+                    📥 Download CSV
+                </button>
+                <button onclick="downloadPDF()" style="background: #FF9800;">
+                    📄 Download PDF
+                    <div class="status pending" style="font-size: 10px; display: block; margin-top: 5px;">Coming Soon
+                    </div>
+                </button>
+                <button onclick="downloadExcel()" style="background: #2196F3;">
+                    📊 Download Excel
+                    <div class="status pending" style="font-size: 10px; display: block; margin-top: 5px;">Coming Soon
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="color: #4CAF50; margin-bottom: 15px;">📋 CSV Export Includes:</h3>
+            <ul class="feature-list">
+                <li><strong>Table 1:</strong> Soil Health Summary (N, P, K, pH, EC, OC, Moisture)</li>
+                <li><strong>Table 2:</strong> Fertilizer Recommendations (Govt. verified prices)</li>
+                <li><strong>Table 3:</strong> Application Schedule (Crop-specific timing)</li>
+                <li><strong>Table 4:</strong> Soil Improvement Advisory (Lime/Gypsum/FYM)</li>
+                <li>Farmer details & field information</li>
+                <li>Important notes & guidelines</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h3 style="color: #4CAF50; margin-bottom: 15px;">🚀 How to Use:</h3>
+            <ol class="feature-list">
+                <li>Register a farmer on the frontend (http://localhost:3001)</li>
+                <li>Submit soil data (manual entry or file upload)</li>
+                <li>Generate recommendations</li>
+                <li>Note the recommendation ID from the URL or response</li>
+                <li>Enter the ID above and click "Download CSV"</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function downloadCSV() {
+            const id = document.getElementById('recommendationId').value;
+            if (!id || id < 1) {
+                alert('Please enter a valid recommendation ID');
+                return;
+            }
+
+            // Download CSV
+            window.location.href = `http://localhost:8080/api/soil-health-card/${id}/csv`;
+        }
+
+        function downloadPDF() {
+            alert('PDF export coming soon! Backend implementation in progress.');
+        }
+
+        function downloadExcel() {
+            alert('Excel export coming soon! Backend implementation in progress.');
+        }
+    </script>
+</body>
+
+</html>

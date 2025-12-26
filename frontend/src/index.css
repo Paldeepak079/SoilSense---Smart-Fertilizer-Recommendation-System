@@ -1,0 +1,164 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  /* Updated to Modern Font */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #000000;
+  color: #ffffff;
+  /* Deep Animated Gradient Background */
+  background: linear-gradient(125deg, #000000 0%, #051405 25%, #000000 50%, #0a1f0a 75%, #000000 100%);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+  min-height: 100vh;
+}
+
+@keyframes gradientBG {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* --- Premium Glassmorphism Cards --- */
+.premium-card {
+  background: rgba(20, 20, 20, 0.6) !important;
+  /* Semi-transparent */
+  backdrop-filter: blur(16px) !important;
+  /* Glass Blur */
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(76, 175, 80, 0.2) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 16px !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(76, 175, 80, 0.1),
+      transparent);
+  transition: 0.5s;
+}
+
+.premium-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(76, 175, 80, 0.6) !important;
+  box-shadow: 0 15px 40px rgba(76, 175, 80, 0.15);
+  /* Green Glow */
+}
+
+.premium-card:hover::before {
+  left: 100%;
+}
+
+/* --- Neon Glows & Icons --- */
+.neon-icon {
+  filter: drop-shadow(0 0 5px rgba(76, 175, 80, 0.6));
+  transition: all 0.3s ease;
+}
+
+.premium-card:hover .neon-icon {
+  filter: drop-shadow(0 0 15px rgba(76, 175, 80, 1));
+  transform: scale(1.1);
+}
+
+/* --- Typography Effects --- */
+.text-shimmer {
+  background: linear-gradient(to right,
+      #4CAF50 20%,
+      #A5D6A7 40%,
+      #81C784 60%,
+      #4CAF50 80%);
+  background-size: 200% auto;
+  color: #4CAF50;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shine 3s linear infinite;
+  font-weight: 700;
+}
+
+@keyframes shine {
+  to {
+    background-position: 200% center;
+  }
+}
+
+.text-glow {
+  color: #fff;
+  text-shadow: 0 0 10px rgba(76, 175, 80, 0.5), 0 0 20px rgba(76, 175, 80, 0.3);
+}
+
+/* --- Table Styles --- */
+.border-glow {
+  border-bottom: 1px solid rgba(76, 175, 80, 0.2);
+  transition: background-color 0.3s ease;
+}
+
+.border-glow:hover {
+  background-color: rgba(76, 175, 80, 0.15) !important;
+}
+
+/* --- Input Override --- */
+.MuiOutlinedInput-root {
+  background: rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(10px);
+}
+
+.MuiOutlinedInput-notchedOutline {
+  border-color: rgba(76, 175, 80, 0.3) !important;
+}
+
+.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #4CAF50 !important;
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #050505;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2e7d32;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4CAF50;
+  box-shadow: 0 0 10px #4CAF50;
+}

@@ -1,0 +1,305 @@
+"""
+Soil Health Card API routes
+Handles generation and download of Soil Health Cards in multiple formats
+"""
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import FileResponse
+from sqlalchemy.orm import Session
+from datetime import datetime
+import uuid
+import os
+
+from database import get_db
+from models import SoilHealthCard, SoilData, Farmer, NutrientStatus, PHStatus
+from schemas import SoilHealthCardCreate, SoilHealthCardResponse
+from services.pdf_generator import SoilHealthCardPDFGenerator
+from services.excel_generator import SoilHealthCardExcelGenerator
+from services.csv_json_generator import CSVJSONGenerator
+
+router = APIRouter()
+
+
+def classify_nutrient(value: float) -> NutrientStatus:
+    """Classify nutrient level"""
+    if value < 15:
+        return NutrientStatus.LOW
+    elif value < 25:
+        return NutrientStatus.MEDIUM
+    else:
+        return NutrientStatus.HIGH
+
+
+def classify_ph(ph: float) -> PHStatus:
+    """Classify pH level"""
+    if ph < 6.5:
+        return PHStatus.ACIDIC
+    elif ph <= 7.5:
+        return PHStatus.NEUTRAL
+    else:
+        return PHStatus.ALKALINE
+
+
+def classify_ec(ec: float) -> str:
+    """Classify EC level"""
+    return "Normal" if ec <= 2.0 else "High"
+
+
+@router.post("/soil-health-card/generate", response_model=SoilHealthCardResponse, status_code=status.HTTP_201_CREATED)
+async def generate_soil_health_card(
+    request: SoilHealthCardCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Generate Soil Health Card
+    Creates card record and generates PDF/Excel reports
+    """
+    # Verify farmer exists
+    farmer = db.query(Farmer).filter(Farmer.id == request.farmer_id).first()
+    if not farmer:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Farmer with ID {request.farmer_id} not found"
+        )
+    
+    # Verify soil data exists
+    soil_data = db.query(SoilData).filter(SoilData.id == request.soil_data_id).first()
+    if not soil_data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Soil data with ID {request.soil_data_id} not found"
+        )
+    
+    # Generate unique card ID
+    card_id = f"SHC{datetime.utcnow().strftime('%Y%m')}{uuid.uuid4().hex[:8].upper()}"
+    
+    # Classify nutrient levels
+    nitrogen_status = classify_nutrient(soil_data.nitrogen) if soil_data.nitrogen is not None else None
+    phosphorus_status = classify_nutrient(soil_data.phosphorus) if soil_data.phosphorus is not None else None
+    potassium_status = classify_nutrient(soil_data.potassium) if soil_data.potassium is not None else None
+    ph_status = classify_ph(soil_data.ph) if soil_data.ph is not None else None
+    ec_status = classify_ec(soil_data.ec) if soil_data.ec is not None else None
+    
+    # Prepare data for report generation
+    farmer_data = {
+        'name': farmer.name,
+        'mobile': farmer.mobile,
+        'village': farmer.village,
+        'district': farmer.district,
+        'state': farmer.state,
+        'field_area': farmer.field_area,
+        'crop_name': farmer.crop_name,
+        'crop_season': farmer.crop_season.value
+    }
+    
+    soil_data_dict = {
+        'sample_id': soil_data.sample_id,
+        'collection_date': soil_data.collection_date.strftime('%d-%b-%Y'),
+        'data_source': soil_data.data_source.value,
+        'nitrogen': soil_data.nitrogen,
+        'phosphorus': soil_data.phosphorus,
+        'potassium': soil_data.potassium,
+        'ph': soil_data.ph,
+        'ec': soil_data.ec,
+        'moisture': soil_data.moisture,
+        'organic_carbon': soil_data.organic_carbon
+    }
+    
+    # Find logo path
+    logo_path = "logo.png" if os.path.exists("logo.png") else None
+    
+    # Generate PDF
+    pdf_path = SoilHealthCardPDFGenerator.generate(
+        farmer_data=farmer_data,
+        soil_data=soil_data_dict,
+        card_id=card_id,
+        logo_path=logo_path
+    )
+    
+    # Generate Excel
+    excel_path = SoilHealthCardExcelGenerator.generate(
+        farmer_data=farmer_data,
+        soil_data=soil_data_dict,
+        card_id=card_id
+    )
+    
+    # Create Soil Health Card record
+    shc = SoilHealthCard(
+        card_id=card_id,
+        farmer_id=request.farmer_id,
+        soil_data_id=request.soil_data_id,
+        nitrogen_status=nitrogen_status,
+        phosphorus_status=phosphorus_status,
+        potassium_status=potassium_status,
+        ph_status=ph_status,
+        ec_status=ec_status,
+        pdf_path=pdf_path,
+        excel_path=excel_path
+    )
+    
+    db.add(shc)
+    db.commit()
+    db.refresh(shc)
+    
+    return shc
+
+
+@router.get("/soil-health-card/{card_id}", response_model=SoilHealthCardResponse)
+async def get_soil_health_card(card_id: str, db: Session = Depends(get_db)):
+    """Get Soil Health Card details by card ID"""
+    shc = db.query(SoilHealthCard).filter(SoilHealthCard.card_id == card_id).first()
+    if not shc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Soil Health Card {card_id} not found"
+        )
+    return shc
+
+
+@router.get("/soil-health-card/{card_id}/download/pdf")
+async def download_pdf(card_id: str, db: Session = Depends(get_db)):
+    """Download Soil Health Card as PDF"""
+    shc = db.query(SoilHealthCard).filter(SoilHealthCard.card_id == card_id).first()
+    if not shc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Soil Health Card {card_id} not found"
+        )
+    
+    if not os.path.exists(shc.pdf_path):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="PDF file not found"
+        )
+    
+    return FileResponse(
+        path=shc.pdf_path,
+        media_type='application/pdf',
+        filename=f"soil_health_card_{card_id}.pdf"
+    )
+
+
+@router.get("/soil-health-card/{card_id}/download/excel")
+async def download_excel(card_id: str, db: Session = Depends(get_db)):
+    """Download Soil Health Card as Excel"""
+    shc = db.query(SoilHealthCard).filter(SoilHealthCard.card_id == card_id).first()
+    if not shc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Soil Health Card {card_id} not found"
+        )
+    
+    if not os.path.exists(shc.excel_path):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Excel file not found"
+        )
+    
+    return FileResponse(
+        path=shc.excel_path,
+        media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        filename=f"soil_health_card_{card_id}.xlsx"
+    )
+
+
+@router.get("/soil-health-card/{card_id}/download/csv")
+async def download_csv(card_id: str, db: Session = Depends(get_db)):
+    """Download Soil Health Card as CSV"""
+    shc = db.query(SoilHealthCard).filter(SoilHealthCard.card_id == card_id).first()
+    if not shc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Soil Health Card {card_id} not found"
+        )
+    
+    # Get associated data
+    farmer = shc.farmer
+    soil_data = shc.soil_data
+    
+    farmer_data = {
+        'name': farmer.name,
+        'mobile': farmer.mobile,
+        'village': farmer.village,
+        'district': farmer.district,
+        'state': farmer.state,
+        'field_area': farmer.field_area,
+        'crop_name': farmer.crop_name,
+        'crop_season': farmer.crop_season.value
+    }
+    
+    soil_data_dict = {
+        'sample_id': soil_data.sample_id,
+        'collection_date': soil_data.collection_date.strftime('%d-%b-%Y'),
+        'data_source': soil_data.data_source.value,
+        'nitrogen': soil_data.nitrogen,
+        'phosphorus': soil_data.phosphorus,
+        'potassium': soil_data.potassium,
+        'ph': soil_data.ph,
+        'ec': soil_data.ec,
+        'moisture': soil_data.moisture,
+        'organic_carbon': soil_data.organic_carbon
+    }
+    
+    # Generate CSV
+    csv_path = CSVJSONGenerator.generate_csv(
+        farmer_data=farmer_data,
+        soil_data=soil_data_dict,
+        card_id=card_id
+    )
+    
+    return FileResponse(
+        path=csv_path,
+        media_type='text/csv',
+        filename=f"soil_health_card_{card_id}.csv"
+    )
+
+
+@router.get("/soil-health-card/{card_id}/download/json")
+async def download_json(card_id: str, db: Session = Depends(get_db)):
+    """Download Soil Health Card as JSON"""
+    shc = db.query(SoilHealthCard).filter(SoilHealthCard.card_id == card_id).first()
+    if not shc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Soil Health Card {card_id} not found"
+        )
+    
+    # Get associated data
+    farmer = shc.farmer
+    soil_data = shc.soil_data
+    
+    farmer_data = {
+        'name': farmer.name,
+        'mobile': farmer.mobile,
+        'village': farmer.village,
+        'district': farmer.district,
+        'state': farmer.state,
+        'field_area': farmer.field_area,
+        'crop_name': farmer.crop_name,
+        'crop_season': farmer.crop_season.value
+    }
+    
+    soil_data_dict = {
+        'sample_id': soil_data.sample_id,
+        'collection_date': soil_data.collection_date.strftime('%d-%b-%Y'),
+        'data_source': soil_data.data_source.value,
+        'nitrogen': soil_data.nitrogen,
+        'phosphorus': soil_data.phosphorus,
+        'potassium': soil_data.potassium,
+        'ph': soil_data.ph,
+        'ec': soil_data.ec,
+        'moisture': soil_data.moisture,
+        'organic_carbon': soil_data.organic_carbon
+    }
+    
+    # Generate JSON
+    json_path = CSVJSONGenerator.generate_json(
+        farmer_data=farmer_data,
+        soil_data=soil_data_dict,
+        card_id=card_id
+    )
+    
+    return FileResponse(
+        path=json_path,
+        media_type='application/json',
+        filename=f"soil_health_card_{card_id}.json"
+    )
